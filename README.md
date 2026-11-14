@@ -17,6 +17,12 @@
 
 </div>
 
+<div align="center">
+
+<img src="https://github.com/marcos-Nieves-24/beebuzz/raw/main/dashboard/bees-divider.svg" width="600" alt=""/>
+
+</div>
+
 ---
 
 <div align="center">
