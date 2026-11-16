@@ -87,8 +87,9 @@ We held out a stratified 20% (seed 42, n=40) before any tuning, ran 5-fold CV wi
 | Model | Train CV acc | Train CV macro-F1 | Holdout acc | Holdout macro-F1 |
 |-------|--------------|-------------------|-------------|------------------|
 | Dummy (majority) | 18.8% | 0.13 | — | — |
-| LDA | 53.1% | 0.53 | — | — |
-| Logistic Regression | 65.6% | 0.66 | — | — |
+| LDA | 64.4% | 0.64 | — | — |
+| Logistic Regression | 72.5% | 0.73 | — | — |
+| RF (default) | 73.8% | 0.74 | — | — |
 | XGBoost (default) | 77.5% | 0.78 | — | — |
 | RF (tuned, Optuna, seed 42) | 76.2% | 0.76 | — | — |
 | **RF (tuned — best)** | **76.2%** | **0.76** | **80.0%** | **0.79** |
@@ -260,6 +261,7 @@ docker run -p 8000:8000 beebuzz
 ```
 beebuzz/
 ├── data/raw/buzz_data.csv          # Mendeley dataset (200 events, 5 species)
+├── data/processed/buzz_librosa.csv  # librosa self-consistent training source (SHA 3cc46232)
 ├── notebooks/
 │   ├── 01_eda.ipynb               # Exploratory data analysis
 │   └── 02_models.ipynb            # Model training + SHAP
