@@ -1,6 +1,9 @@
 # Streamlit Cloud config — https://share.streamlit.io
 # Main file: dashboard/app.py
 # Python version: 3.11
+# H10 note: enableCORS stays false for Streamlit Cloud (public demo, no
+# cookies/auth to protect; avoids blocking the embedded status frame).
+# Revisit if the app ever handles credentials or private data.
 [server]
 headless = true
 enableCORS = false
