@@ -18,7 +18,8 @@ import shap
 from features import FEATURES, TARGET_SPECIES, load, split_features_target
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = Path(os.environ.get("BEEBUZZ_DATA", ROOT / "data" / "raw" / "buzz_data.csv"))
+# Same canonical source as training (librosa). Override with BEEBUZZ_DATA.
+DATA = Path(os.environ.get("BEEBUZZ_DATA", ROOT / "data" / "processed" / "buzz_librosa.csv"))
 MODELS = ROOT / "models"
 REPORTS = ROOT / "reports"
 REPORTS.mkdir(exist_ok=True)

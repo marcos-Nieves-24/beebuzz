@@ -36,7 +36,10 @@ from xgboost import XGBClassifier
 from features import FEATURES, TARGET_SPECIES, TARGET_TYPE, load, split_features_target
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = Path(os.environ.get("BEEBUZZ_DATA", ROOT / "data" / "raw" / "buzz_data.csv"))
+# Canonical training data: self-consistent librosa features (model.joblib trained on this).
+# raw/buzz_data.csv (SHA256 cdf3b76d…) is the R-pipeline original, kept for reference.
+# processed/buzz_librosa.csv (SHA256 3cc46232…) is the training source. Override with BEEBUZZ_DATA.
+DATA = Path(os.environ.get("BEEBUZZ_DATA", ROOT / "data" / "processed" / "buzz_librosa.csv"))
 MODELS = ROOT / "models"
 REPORTS = ROOT / "reports"
 MODELS.mkdir(exist_ok=True)
