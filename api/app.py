@@ -1,4 +1,5 @@
 """FastAPI service for BeeBuzz (bee species + buzz type classification)."""
+import math
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -57,10 +58,10 @@ def _validate_ranges(d: dict):
     for f in FEATURES:
         if f.startswith(("mean.", "sd.", "skew.", "kurt.", "med.")):
             v = d.get(f)
-            if v is not None and abs(v) > MFCC_ABS_MAX:
+            if v is not None and (not math.isfinite(v) or abs(v) > MFCC_ABS_MAX):
                 raise HTTPException(
                     status_code=422,
-                    detail=f"{f}={v} implausible (|v| > {MFCC_ABS_MAX}). Check feature extraction.")
+                    detail=f"{f}={v} implausible (non-finite or |v| > {MFCC_ABS_MAX}). Check feature extraction.")
 
 
 @app.get("/health")

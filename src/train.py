@@ -92,6 +92,8 @@ def main():
     y_enc = y.map(label_map)
 
     # --- Untouched holdout BEFORE tuning ---
+    # Stratified by species only; no separation by individual/session.
+    # Follow-up: GroupKFold by individual/session + external probe.
     X_tr, X_te, y_tr, y_te = train_test_split(
         X, y_enc, test_size=0.2, stratify=y_enc, random_state=42)
     print(f"train: {X_tr.shape}, holdout: {X_te.shape} (untouched until final eval)")

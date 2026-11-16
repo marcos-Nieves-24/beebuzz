@@ -530,6 +530,9 @@ with tab1:
                 if f not in vals:
                     vals[f] = 0.0
 
+        # Validation parity note: manual entry does not pre-validate here;
+        # the API enforces the same contract (ffreq 50-1000 Hz, duration 0-5 s,
+        # MFCC finite with |v| <= 500). Follow-up: share one validator.
         c1, c2 = st.columns(2)
         if c1.button(t["predict_species"], type="primary"):
             with st.spinner("Predicting..."):
