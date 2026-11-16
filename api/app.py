@@ -67,7 +67,7 @@ def _validate_ranges(d: dict):
 def health():
     return {"status": "ok" if all(MODELS_OK.values()) else "degraded",
             "models": MODELS_OK, "features": FEATURES,
-            "calibration_note": "confidence is RF vote frequency, not calibrated probability (Brier 0.084, ECE 0.31 on holdout)"}
+            "calibration_note": "confidence is RF vote frequency, not calibrated probability (Brier 0.096, ECE 0.353 on holdout)"}
 
 
 @app.post("/predict")
