@@ -81,7 +81,7 @@ MFCC) extracted from audio.
 
 **Performance (honest 80/20 holdout, n=40):**
 - Species: 80.0% accuracy (RF tuned, 67 librosa features, holdout n=40)
-- Buzz type (floral/flight): 100% — with filename-prefix caveat
+- Buzz type (floral/flight): 100% on lab holdout — protocol artifact (filename prefix predicts label), not field-valid
 - Calibration: Brier 0.096, ECE 0.35 (overconfident)
 
 **Data source:** Mendeley Data — Dual-Signal Buzz Pollination (CC BY 4.0).
@@ -165,7 +165,7 @@ MFCC) extraídas del audio.
 
 **Rendimiento (holdout 80/20 honesto, n=40):**
 - Especies: 80.0% accuracy (RF tuned, 67 features librosa, holdout n=40)
-- Tipo de buzz (floral/flight): 100% — con caveat de prefijo de archivo
+- Tipo de buzz (floral/flight): 100% en holdout de laboratorio — artefacto de protocolo (el prefijo predice la etiqueta), no válido en campo
 - Calibración: Brier 0.096, ECE 0.35 (overconfident)
 
 **Fuente de datos:** Mendeley Data — Dual-Signal Buzz Pollination (CC BY 4.0).
