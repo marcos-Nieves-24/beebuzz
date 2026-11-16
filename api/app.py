@@ -88,4 +88,11 @@ def predict(req: PredictRequest):
 def predict_buzz_type(req: PredictRequest):
     d = req.model_dump()
     _validate_ranges(d)
+    if not MODELS_OK["type"]:
+        # lazy check in case lifespan did not run (e.g. tests)
+        try:
+            import predict as _p
+            _ = _p.MODEL_TYPE
+        except Exception:
+            raise HTTPException(status_code=503, detail="buzz-type model unavailable")
     return predict_type(d)
