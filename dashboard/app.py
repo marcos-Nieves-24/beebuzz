@@ -346,6 +346,8 @@ classes = cfg["classes"]
 # ---------- Session state ----------
 if "predictions" not in st.session_state:
     st.session_state.predictions = []
+if "audio_done" not in st.session_state:
+    st.session_state.audio_done = {}
 
 # ---------- Example data ----------
 example_df = None
@@ -383,6 +385,9 @@ with tab1:
                 for w in wavs:
                     if getattr(w, "size", 0) > 10 * 1024 * 1024:
                         st.error(f"{t['audio_too_big']}: {w.name}")
+                        continue
+                    fkey = (w.name, getattr(w, "size", 0))
+                    if fkey in st.session_state.audio_done:
                         continue
                     raw = bytes(w.getbuffer())
                     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -432,6 +437,7 @@ with tab1:
                         "buzz_type": bt["buzz_type"],
                         "buzz_confidence": bt["confidence"],
                     }]))
+                    st.session_state.audio_done[fkey] = True
 
     elif mode == t["upload_csv"]:
         # Example CSV download
@@ -603,6 +609,7 @@ with tab2:
 
         if st.button(t["clear_results"]):
             st.session_state.predictions = []
+            st.session_state.audio_done = {}
             st.rerun()
 
 # ===================== TAB 3 =====================
