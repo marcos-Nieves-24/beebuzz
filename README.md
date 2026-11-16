@@ -9,8 +9,8 @@
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-f5a623?style=flat-square&labelColor=0f1117)](https://creativecommons.org/licenses/by/4.0/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-f5a623?style=flat-square&labelColor=0f1117)](https://www.python.org/downloads/)
 [![ML Zoomcamp 2026](https://img.shields.io/badge/ML%20Zoomcamp-2026-f5a623?style=flat-square&labelColor=0f1117)](https://github.com/DataTalksClub/machine-learning-zoomcamp)
-[![Tests](https://img.shields.io/badge/tests-4%20passing-f5a623?style=flat-square&labelColor=0f1117)](https://github.com/marcos-Nieves-24/machine-learning-zoomcamp/tree/main/project/beebuzz/tests)
-[![Docker](https://img.shields.io/badge/docker-ready-f5a623?style=flat-square&labelColor=0f1117)](https://github.com/marcos-Nieves-24/machine-learning-zoomcamp/tree/main/project/beebuzz/api/Dockerfile)
+[![Tests](https://img.shields.io/badge/tests-4%20passing-f5a623?style=flat-square&labelColor=0f1117)](https://github.com/marcos-Nieves-24/beebuzz/tree/main/tests)
+[![Docker](https://img.shields.io/badge/docker-ready-f5a623?style=flat-square&labelColor=0f1117)](https://github.com/marcos-Nieves-24/beebuzz/blob/main/api/Dockerfile)
 [![Streamlit App](https://img.shields.io/badge/Streamlit-Live%20Demo-f5a623?style=flat-square&labelColor=0f1117)](https://beebuzz-csqzda6ff5wtdlwicwuzcj.streamlit.app/)
 
 **Live demo:** https://beebuzz-csqzda6ff5wtdlwicwuzcj.streamlit.app/
@@ -90,9 +90,8 @@ We held out a stratified 20% (seed 42, n=40) before any tuning, ran 5-fold CV wi
 | LDA | 64.4% | 0.64 | — | — |
 | Logistic Regression | 72.5% | 0.73 | — | — |
 | RF (default) | 73.8% | 0.74 | — | — |
-| XGBoost (default) | 77.5% | 0.78 | — | — |
-| RF (tuned, Optuna, seed 42) | 76.2% | 0.76 | — | — |
-| **RF (tuned — best)** | **76.2%** | **0.76** | **80.0%** | **0.79** |
+| XGBoost (default) | 69.4% | 0.69 | — | — |
+| **RF (tuned, Optuna, seed 42 — best)** | **76.2%** | **0.76** | **80.0%** | **0.79** |
 
 Per species on the holdout (8 samples each): Xylocopa pretinha F1 0.94, *Bombus morio* 0.75, Banguela sp. 0.88, Oxaea verdinha 0.82, Centris cinza 0.57 with recall 0.50, the weakest of the five.
 
@@ -128,7 +127,7 @@ One caution: filename prefix (`B_` floral vs `V_` flight) predicts the label per
 <details>
 <summary>Why is buzz type ~100% but species only 80%?</summary>
 
-Floral sonication and flight buzz differ a lot in duration, frequency and amplitude. Telling five species apart means catching small differences in timbre, which is harder. Each event is an independent recording, so the gap reflects task difficulty, not a leak between train and test.
+Floral sonication and flight buzz differ a lot in duration, frequency and amplitude, so telling five species apart is harder than telling buzz types apart. But each event is one lab recording with no separation by individual or session, so the gap also reflects recording setup — not proof the model would hold up in the field.
 
 </details>
 
@@ -143,7 +142,7 @@ The original paper reports 95% accuracy (combined) using 182 features (cinematic
 2. Validation: 1000 random splits with a 33% holdout against our single stratified 80/20 split. Random resampling can leak events from the same individual across splits and inflate the score.
 3. Sample size: 518 samples in the paper against 200 events in our subset.
 
-Tuning did not beat the defaults, which is worth reporting as is. SHAP is our addition for explaining predictions.
+Tuning the Random Forest (Optuna, 20 trials) lifted it from 73.8% to 76.2% CV accuracy; the other defaults are reported as is. SHAP is our addition for explaining predictions.
 
 </details>
 
@@ -197,8 +196,8 @@ SHAP puts fundamental frequency first for every species, then the first three MF
 ### Installation
 
 ```bash
-git clone <repo-url>
-cd project/beebuzz
+git clone https://github.com/marcos-Nieves-24/beebuzz.git
+cd beebuzz
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -211,7 +210,7 @@ pip install -r requirements.txt
 python src/train.py
 ```
 
-This trains 5 models (Dummy, LDA, Logistic Regression, Random Forest, XGBoost), runs Optuna tuning on RF, and saves the best model to `models/model.joblib`.
+This evaluates baselines (Dummy, LDA, Logistic Regression, RF, XGBoost), runs Optuna tuning on RF (20 trials), and saves the best model to `models/model.joblib`.
 
 ### Run the API
 
@@ -242,7 +241,7 @@ Known limitation: the original training CSV came from the paper's R pipeline, wh
 streamlit run dashboard/app.py
 ```
 
-Opens at `http://localhost:8501`. Upload a CSV or enter features manually. Bilingual (EN/ES).
+Opens at `http://localhost:8501`. Upload a CSV, upload audio (.wav), or enter features manually. Bilingual (EN/ES).
 
 ### Docker
 
@@ -269,6 +268,7 @@ beebuzz/
 │   ├── features.py                 # Feature engineering
 │   ├── train.py                    # Training + tuning + evaluation
 │   ├── predict.py                  # Inference
+│   ├── validation.py               # Shared API/dashboard checks
 │   └── shap_analysis.py            # SHAP explainability
 ├── models/
 │   ├── model.joblib                # Best species classifier (RF)
@@ -290,7 +290,9 @@ beebuzz/
 ├── tests/
 │   └── smoke_test.py               # 4 smoke tests
 ├── scripts/
-│   └── download_data.py            # Download dataset from GitHub
+│   ├── download_data.py            # Download dataset from GitHub
+│   ├── extract_features.py           # WAV -> CSV (67 librosa features)
+│   └── build_librosa_dataset.py        # Build processed training CSV
 ├── reports/
 │   ├── shap_summary.png
 │   └── shap_bar.png
