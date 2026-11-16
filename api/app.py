@@ -1,5 +1,4 @@
 """FastAPI service for BeeBuzz (bee species + buzz type classification)."""
-import math
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,14 +7,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, create_model
+from validation import FIELD_CONSTRAINTS, MFCC_ABS_MAX, validate_features
 
 from predict import FEATURES, predict_one, predict_type
 
-# Biologically plausible ranges (from training data, with margin).
-# ffreq: bee buzz fundamental ~50-1000 Hz. duration: positive, < 5 s.
-# MFCC stats: unbounded in theory; reject absurd values to catch unit errors.
-FIELD_CONSTRAINTS = {"ffreq": (50.0, 1000.0), "duration.s": (0.0, 5.0)}
-MFCC_ABS_MAX = 500.0
+# Ranges live in src/validation.py (single source of truth with dashboard).
 
 _fields = {}
 for f in FEATURES:
@@ -49,19 +45,10 @@ app = FastAPI(title="BeeBuzz Classifier", version="0.2.0", lifespan=lifespan)
 
 
 def _validate_ranges(d: dict):
-    for f, (lo, hi) in FIELD_CONSTRAINTS.items():
-        v = d.get(f)
-        if v is not None and not (lo <= v <= hi):
-            raise HTTPException(
-                status_code=422,
-                detail=f"{f}={v} out of plausible range [{lo}, {hi}]. Check units (Hz, seconds).")
-    for f in FEATURES:
-        if f.startswith(("mean.", "sd.", "skew.", "kurt.", "med.")):
-            v = d.get(f)
-            if v is not None and (not math.isfinite(v) or abs(v) > MFCC_ABS_MAX):
-                raise HTTPException(
-                    status_code=422,
-                    detail=f"{f}={v} implausible (non-finite or |v| > {MFCC_ABS_MAX}). Check feature extraction.")
+    try:
+        validate_features(d)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @app.get("/health")

@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from features import FEATURES
 from predict import predict_one, predict_type
+from validation import validate_features
 
 # ---------- Translations ----------
 T = {
@@ -39,6 +40,7 @@ T = {
         "audio_too_big": "File too large (max 10 MB).",
         "csv_too_big": "File too large (max 10 MB).",
         "csv_too_many_rows": "Too many rows (max 2000).",
+        "csv_no_valid_rows": "No valid rows to predict.",
         "rows_loaded": "rows loaded with",
         "columns": "columns",
         "predict_all": "Predict all",
@@ -127,6 +129,7 @@ MFCC) extracted from audio.
         "audio_too_big": "Archivo muy grande (máx. 10 MB).",
         "csv_too_big": "Archivo muy grande (máx. 10 MB).",
         "csv_too_many_rows": "Demasiadas filas (máx. 2000).",
+        "csv_no_valid_rows": "Sin filas válidas para predecir.",
         "rows_loaded": "filas cargadas con",
         "columns": "columnas",
         "predict_all": "Predecir todas",
@@ -419,6 +422,11 @@ with tab1:
                         except Exception:
                             st.caption("—")
                     feats = {f: row[f] for f in FEATURES}
+                    try:
+                        validate_features(feats)
+                    except ValueError as e:
+                        st.error(f"{w.name}: {e}")
+                        continue
                     with st.spinner("Predicting..."):
                         sp = predict_one(feats)
                         bt = predict_type(feats)
@@ -470,9 +478,15 @@ with tab1:
 
                 if st.button(t["predict_all"], type="primary"):
                     results = []
+                    skipped = 0
                     progress = st.progress(0)
                     for i, (_, row) in enumerate(df.iterrows()):
                         feats = {f: float(row[f]) if f in row and pd.notna(row[f]) else 0.0 for f in FEATURES}
+                        try:
+                            validate_features(feats)
+                        except ValueError:
+                            skipped += 1
+                            continue
                         sp = predict_one(feats)
                         bt = predict_type(feats)
                         results.append({
@@ -482,6 +496,11 @@ with tab1:
                             "buzz_confidence": round(bt["confidence"], 4),
                         })
                         progress.progress((i + 1) / len(df))
+                    if not results:
+                        st.error(t["csv_no_valid_rows"])
+                        st.stop()
+                    if skipped:
+                        st.warning(f"{skipped} skipped (out of range)")
                     res_df = pd.DataFrame(results)
                     st.session_state.predictions.append(res_df)
                     st.success(f"{len(res_df)} {t['predictions_done']}")
@@ -536,11 +555,14 @@ with tab1:
                 if f not in vals:
                     vals[f] = 0.0
 
-        # Validation parity note: manual entry does not pre-validate here;
-        # the API enforces the same contract (ffreq 50-1000 Hz, duration 0-5 s,
-        # MFCC finite with |v| <= 500). Follow-up: share one validator.
+        # Shared contract with the API (src/validation.py): same ranges here.
         c1, c2 = st.columns(2)
         if c1.button(t["predict_species"], type="primary"):
+            try:
+                validate_features(vals)
+            except ValueError as e:
+                st.error(str(e))
+                st.stop()
             with st.spinner("Predicting..."):
                 res = predict_one(vals)
             # Format species name: italicize genus/species, but not "sp."
@@ -562,6 +584,11 @@ with tab1:
             }]))
 
         if c2.button(t["predict_buzz"], type="primary"):
+            try:
+                validate_features(vals)
+            except ValueError as e:
+                st.error(str(e))
+                st.stop()
             with st.spinner("Predicting..."):
                 res = predict_type(vals)
             st.markdown(f"""
