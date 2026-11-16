@@ -35,6 +35,10 @@ T = {
         "audio_scale_note": "Features come from the same librosa extractor the model was trained on. Confidence is not calibrated — treat scores as indicative.",
         "audio_error": "Could not process this file",
         "audio_no_librosa": "Audio support needs librosa + soundfile installed.",
+        "audio_too_many": "Too many files (max 10).",
+        "audio_too_big": "File too large (max 10 MB).",
+        "csv_too_big": "File too large (max 10 MB).",
+        "csv_too_many_rows": "Too many rows (max 2000).",
         "rows_loaded": "rows loaded with",
         "columns": "columns",
         "predict_all": "Predict all",
@@ -119,6 +123,10 @@ MFCC) extracted from audio.
         "audio_scale_note": "Los features vienen del mismo extractor librosa con el que se entrenó el modelo. La confianza no está calibrada: tomá los scores como indicativos.",
         "audio_error": "No se pudo procesar este archivo",
         "audio_no_librosa": "El soporte de audio necesita librosa + soundfile instalados.",
+        "audio_too_many": "Demasiados archivos (máx. 10).",
+        "audio_too_big": "Archivo muy grande (máx. 10 MB).",
+        "csv_too_big": "Archivo muy grande (máx. 10 MB).",
+        "csv_too_many_rows": "Demasiadas filas (máx. 2000).",
         "rows_loaded": "filas cargadas con",
         "columns": "columnas",
         "predict_all": "Predecir todas",
@@ -367,9 +375,15 @@ with tab1:
         if audio_ok:
             wavs = st.file_uploader(t["audio_label"], type=["wav"], accept_multiple_files=True)
             if wavs:
+                if len(wavs) > 10:
+                    st.error(t["audio_too_many"])
+                    st.stop()
                 import io
                 import tempfile
                 for w in wavs:
+                    if getattr(w, "size", 0) > 10 * 1024 * 1024:
+                        st.error(f"{t['audio_too_big']}: {w.name}")
+                        continue
                     raw = bytes(w.getbuffer())
                     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                         tmp.write(raw)
@@ -427,6 +441,9 @@ with tab1:
 
         uploaded = st.file_uploader(t["upload_label"], type="csv")
         if uploaded is not None:
+            if getattr(uploaded, "size", 0) > 10 * 1024 * 1024:
+                st.error(t["csv_too_big"])
+                st.stop()
             try:
                 df = pd.read_csv(uploaded, sep=";", decimal=",")
             except Exception:
@@ -437,6 +454,9 @@ with tab1:
             missing = [f for f in FEATURES if f not in df.columns]
             if missing:
                 st.error(f"{t['csv_invalid']} Missing: {', '.join(missing[:5])}...")
+            elif len(df) > 2000:
+                st.error(t["csv_too_many_rows"])
+                st.stop()
             else:
                 st.success(t["csv_valid"])
                 st.write(f"**{len(df)} {t['rows_loaded']} {len(df.columns)} {t['columns']}**")
